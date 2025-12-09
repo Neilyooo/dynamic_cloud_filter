@@ -1,0 +1,71 @@
+<?xml version="1.0"?>
+<!--
+  Complete Detection & Filtering Pipeline
+
+  This launch file runs the complete workflow:
+  1. PointPillar 3D object detection on input point cloud
+  2. Dynamic point filtering based on detections
+  3. Output clean static point cloud for SLAM
+
+  Copyright (c) 2024 AutoCity
+  Author: Sonny (sonnygonnarich@gmail.com)
+-->
+<launch>
+  <!-- Arguments -->
+  <arg name="node_name" default="detection_filter"/>
+
+  <!-- Input/Output topics -->
+  <arg name="input_cloud_topic" default="/velodyne_points"/>
+  <arg name="output_static_cloud" default="/filtered_pointcloud"/>
+  <arg name="output_dynamic_cloud" default="/dynamic_pointcloud"/>
+  <arg name="output_boxes" default="/detection/boxes"/>
+
+  <!-- Model and configuration -->
+  <arg name="model_path" default="$(find dynamic_cloud_filter)/models/"/>
+  <arg name="lidar_frame" default="base_link"/>
+  <arg name="verbose" default="false"/>
+
+  <!-- Filtering parameters -->
+  <arg name="min_range" default="0.5"/>
+  <arg name="max_range" default="80.0"/>
+  <arg name="bbox_margin" default="0.2"/>
+  <arg name="bbox_search_radius" default="2.0"/>
+  <arg name="filter_by_class" default="true"/>
+  <arg name="publish_dynamic_cloud" default="true"/>
+
+  <!-- Dynamic classes: 0=car, 6=cyclist, 8=pedestrian -->
+  <arg name="dynamic_classes" default="[0, 6, 8]"/>
+
+  <!-- Visualization -->
+  <arg name="rviz" default="false"/>
+
+  <!-- Detection & Filter Node -->
+  <node pkg="dynamic_cloud_filter" type="detection_filter_node"
+        name="$(arg node_name)" output="screen">
+
+    <!-- Model configuration -->
+    <param name="model_path" value="$(arg model_path)"/>
+    <param name="lidar_frame" value="$(arg lidar_frame)"/>
+    <param name="verbose" value="$(arg verbose)"/>
+
+    <!-- Filtering parameters -->
+    <param name="min_range" value="$(arg min_range)"/>
+    <param name="max_range" value="$(arg max_range)"/>
+    <param name="bbox_margin" value="$(arg bbox_margin)"/>
+    <param name="bbox_search_radius" value="$(arg bbox_search_radius)"/>
+    <param name="filter_by_class" value="$(arg filter_by_class)"/>
+    <param name="publish_dynamic_cloud" value="$(arg publish_dynamic_cloud)"/>
+    <rosparam param="dynamic_classes" subst_value="True">$(arg dynamic_classes)</rosparam>
+
+    <!-- Topic remapping -->
+    <remap from="~/input/pointcloud" to="$(arg input_cloud_topic)"/>
+    <remap from="~/output/static_cloud" to="$(arg output_static_cloud)"/>
+    <remap from="~/output/dynamic_cloud" to="$(arg output_dynamic_cloud)"/>
+    <remap from="~/output/bounding_boxes" to="$(arg output_boxes)"/>
+  </node>
+
+  <!-- Optional: RViz Visualization -->
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="rviz"
+        args="-d $(find dynamic_cloud_filter)/config/visualization.rviz"/>
+
+</launch>

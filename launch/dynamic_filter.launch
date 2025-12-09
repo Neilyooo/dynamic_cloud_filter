@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<!--
+  Dynamic Cloud Filter Launch File
+
+  This launch file starts the dynamic point cloud filtering node.
+  It removes dynamic objects detected by PointPillar/CenterPoint from the point cloud.
+-->
+<launch>
+  <!-- Arguments -->
+  <arg name="node_name" default="dynamic_cloud_filter"/>
+  <arg name="config_file" default="$(find dynamic_cloud_filter)/config/default_params.yaml"/>
+
+  <!-- Input topics -->
+  <arg name="input_cloud_topic" default="/points_raw"/>
+  <arg name="input_bbox_topic" default="/centerpoint/bounding_boxes"/>
+  <arg name="input_odom_topic" default="/odometry"/>
+
+  <!-- Output topics -->
+  <arg name="output_static_cloud" default="/filtered/static_cloud"/>
+  <arg name="output_dynamic_cloud" default="/filtered/dynamic_cloud"/>
+  <arg name="output_boxes" default="/filtered/boxes"/>
+  <arg name="output_markers" default="/filtered/visualization"/>
+
+  <!-- Visualization -->
+  <arg name="rviz" default="false"/>
+  <arg name="rviz_config" default="$(find dynamic_cloud_filter)/config/visualization.rviz"/>
+
+  <!-- Dynamic Cloud Filter Node -->
+  <node pkg="dynamic_cloud_filter" type="dynamic_cloud_filter_node" name="$(arg node_name)" output="screen">
+    <!-- Load parameters -->
+    <rosparam command="load" file="$(arg config_file)"/>
+
+    <!-- Remap input topics -->
+    <remap from="~/input/pointcloud" to="$(arg input_cloud_topic)"/>
+    <remap from="~/input/bounding_boxes" to="$(arg input_bbox_topic)"/>
+    <remap from="~/input/odometry" to="$(arg input_odom_topic)"/>
+
+    <!-- Remap output topics -->
+    <remap from="~/output/static_cloud" to="$(arg output_static_cloud)"/>
+    <remap from="~/output/dynamic_cloud" to="$(arg output_dynamic_cloud)"/>
+    <remap from="~/output/filtered_boxes" to="$(arg output_boxes)"/>
+    <remap from="~/output/visualization" to="$(arg output_markers)"/>
+  </node>
+
+  <!-- Optional: RViz Visualization -->
+  <node if="$(arg rviz)" pkg="rviz" type="rviz" name="rviz_dynamic_filter"
+        args="-d $(arg rviz_config)"/>
+
+</launch>

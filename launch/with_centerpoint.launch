@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<!--
+  Complete Pipeline: CenterPoint Detection + Dynamic Filtering
+
+  This launch file demonstrates the complete workflow:
+  1. Point cloud input
+  2. CenterPoint object detection
+  3. Dynamic point cloud filtering
+  4. Output clean static point cloud for SLAM
+-->
+<launch>
+  <!-- Arguments -->
+  <arg name="pointcloud_topic" default="/points_raw"/>
+  <arg name="filtered_output" default="/filtered_pointcloud"/>
+
+  <!-- CenterPoint Detection Node -->
+  <!-- NOTE: You need to integrate your own CenterPoint/PointPillar node here -->
+  <!-- This is a placeholder - replace with actual detection node -->
+  <!--
+  <include file="$(find centerpoint_ros)/launch/centerpoint.launch">
+    <arg name="input_topic" value="$(arg pointcloud_topic)"/>
+    <arg name="output_boxes" value="/detection/bounding_boxes"/>
+  </include>
+  -->
+
+  <!-- Dynamic Cloud Filter -->
+  <include file="$(find dynamic_cloud_filter)/launch/dynamic_filter.launch">
+    <arg name="input_cloud_topic" value="$(arg pointcloud_topic)"/>
+    <arg name="input_bbox_topic" value="/detection/bounding_boxes"/>
+    <arg name="output_static_cloud" value="$(arg filtered_output)"/>
+  </include>
+
+  <!-- Optional: Your SLAM Frontend -->
+  <!-- Uncomment and modify to integrate with your SLAM system -->
+  <!--
+  <include file="$(find your_slam)/launch/your_slam.launch">
+    <arg name="pointcloud_topic" value="$(arg filtered_output)"/>
+  </include>
+  -->
+
+</launch>

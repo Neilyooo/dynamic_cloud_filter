@@ -1,0 +1,39 @@
+# Dynamic Cloud Filter - Default Configuration
+
+# Frame IDs
+frames:
+  odom: "odom"
+  lidar: "base_link"
+
+# Point Cloud Preprocessing
+preprocessing:
+  enable_crop_filter: false
+  crop_size: 1.0              # Remove points within this distance from origin (meters)
+  enable_voxel_filter: true
+  voxel_leaf_size: 0.05       # Voxel size for downsampling (meters)
+  min_range: 0.5              # Minimum point range (meters)
+  max_range: 80.0             # Maximum point range (meters)
+
+# Dynamic Object Filtering
+filtering:
+  bbox_margin: 0.2            # Safety margin around bounding boxes (meters)
+  bbox_search_radius: 2.0     # KD-tree search radius for bbox (meters)
+  filter_by_velocity: false   # Only filter moving objects
+  velocity_threshold: 0.1     # Minimum velocity to consider dynamic (m/s)
+  filter_by_class: true       # Filter only specific object classes
+  dynamic_classes: [0, 1, 2, 3, 7, 8]  # Classes to filter: 0=car, 6=cyclist, 8=pedestrian
+                              # Full list: 0=car, 1=truck, 2=construction_vehicle,
+                              # 3=bus, 4=trailer, 5=barrier, 6=motorcycle,
+                              # 7=bicycle, 8=pedestrian, 9=traffic_cone
+
+# Multi-Object Tracking
+tracking:
+  bbox_buffer_size: 5         # Number of bbox messages to buffer
+  use_tracking: false         # Use tracking ID if available
+  min_track_age: 3            # Minimum tracking frames to trust
+
+# Output Settings
+output:
+  publish_dynamic_cloud: true  # Publish removed dynamic points
+  publish_visualization: true  # Publish visualization markers
+  verbose: false               # Print detailed statistics

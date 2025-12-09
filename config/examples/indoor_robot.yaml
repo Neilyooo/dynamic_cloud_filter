@@ -1,0 +1,34 @@
+# Dynamic Cloud Filter Configuration - Indoor Robot Navigation
+#
+# Optimized for indoor mobile robots
+# Conservative filtering focused on people detection
+
+frames:
+  odom: "odom"
+  lidar: "base_scan"
+
+preprocessing:
+  enable_crop_filter: true
+  crop_size: 0.5              # Small robot footprint
+  enable_voxel_filter: true
+  voxel_leaf_size: 0.05       # High resolution for indoor
+  min_range: 0.3
+  max_range: 30.0             # Indoor range
+
+filtering:
+  bbox_margin: 0.5            # Large safety margin around people
+  bbox_search_radius: 2.0
+  filter_by_velocity: false   # Filter even stationary people
+  velocity_threshold: 0.0
+  filter_by_class: true
+  dynamic_classes: [8]        # Only pedestrians
+
+tracking:
+  bbox_buffer_size: 3
+  use_tracking: false         # Indoor detections may be intermittent
+  min_track_age: 2
+
+output:
+  publish_dynamic_cloud: true
+  publish_visualization: true
+  verbose: true               # Helpful for debugging

@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!--
+  Test Launch File - For Testing Without Detection
+
+  This is for testing the filter with pre-recorded detection results
+  or simulated bounding boxes.
+-->
+<launch>
+  <!-- Dynamic Cloud Filter -->
+  <node pkg="dynamic_cloud_filter" type="dynamic_cloud_filter_node"
+        name="dynamic_cloud_filter" output="screen">
+
+    <!-- Load default config -->
+    <rosparam command="load" file="$(find dynamic_cloud_filter)/config/default_params.yaml"/>
+
+    <!-- Topic remappings -->
+    <remap from="~/input/pointcloud" to="/velodyne_points"/>
+    <remap from="~/input/bounding_boxes" to="/detection/boxes"/>
+    <remap from="~/output/static_cloud" to="/points_filtered"/>
+    <remap from="~/output/dynamic_cloud" to="/points_dynamic"/>
+  </node>
+
+  <!-- RViz for visualization -->
+  <node pkg="rviz" type="rviz" name="rviz"
+        args="-d $(find dynamic_cloud_filter)/config/visualization.rviz"
+        if="false"/>  <!-- Set to true to enable -->
+
+</launch>

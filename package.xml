@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>dynamic_cloud_filter</name>
+  <version>1.0.0</version>
+  <description>
+    A standalone ROS package for dynamic point cloud filtering using PointPillar detection and MOT tracking.
+    This package removes dynamic objects from point clouds for robust SLAM in dynamic environments.
+  </description>
+
+  <maintainer email="sonnygonnarich@gmail.com">Sonny (AutoCity)</maintainer>
+  <license>MIT</license>
+
+  <author email="sonnygonnarich@gmail.com">Sonny (AutoCity)</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <!-- Core ROS dependencies -->
+  <depend>roscpp</depend>
+  <depend>std_msgs</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>visualization_msgs</depend>
+  <depend>tf</depend>
+  <depend>tf2_ros</depend>
+
+  <!-- PCL dependencies -->
+  <depend>pcl_ros</depend>
+  <depend>pcl_conversions</depend>
+
+  <!-- JSK for bounding boxes -->
+  <depend>jsk_recognition_msgs</depend>
+
+  <!-- Dynamic reconfigure (optional) -->
+  <build_depend>dynamic_reconfigure</build_depend>
+  <exec_depend>dynamic_reconfigure</exec_depend>
+
+</package>

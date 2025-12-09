@@ -1,0 +1,35 @@
+# Dynamic Cloud Filter Configuration - Urban Driving Scenario
+#
+# Optimized for autonomous vehicles in urban environments
+# Filters moving vehicles and pedestrians while preserving buildings/infrastructure
+
+frames:
+  odom: "odom"
+  lidar: "velodyne"
+
+preprocessing:
+  enable_crop_filter: true
+  crop_size: 2.0              # Remove ego-vehicle points
+  enable_voxel_filter: true
+  voxel_leaf_size: 0.1        # Balance between detail and speed
+  min_range: 1.0              # Ignore very close points
+  max_range: 100.0            # Urban range
+
+filtering:
+  bbox_margin: 0.3            # Conservative margin for safety
+  bbox_search_radius: 3.0     # Account for detection uncertainty
+  filter_by_velocity: true    # Only filter moving objects
+  velocity_threshold: 0.5     # Walking speed threshold
+  filter_by_class: true
+  dynamic_classes: [0, 1, 3, 6, 7, 8]  # Vehicles, bikes, pedestrians
+  # 0=car, 1=truck, 3=bus, 6=motorcycle, 7=bicycle, 8=pedestrian
+
+tracking:
+  bbox_buffer_size: 5
+  use_tracking: true
+  min_track_age: 3            # Trust objects tracked for 3+ frames
+
+output:
+  publish_dynamic_cloud: true
+  publish_visualization: true
+  verbose: false
