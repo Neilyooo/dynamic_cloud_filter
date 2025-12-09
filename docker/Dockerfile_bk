@@ -1,0 +1,119 @@
+# -----------------------------------------------------------------------------
+# 基础镜像: Ubuntu 20.04 + CUDA 11.3
+# -----------------------------------------------------------------------------
+FROM nvidia/cuda:11.3.1-devel-ubuntu20.04
+
+# -----------------------------------------------------------------------------
+# 环境变量:
+# - 设置为非交互式，防止 apt 在构建时卡住
+# - 设置时区
+# - 确保 CUDA 路径被系统和 ROS 识别
+# -----------------------------------------------------------------------------
+ENV DEBIAN_FRONTEND=noninteractive
+ENV TZ=Etc/UTC
+ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
+ENV NVIDIA_VISIBLE_DEVICES all
+ENV LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.3/lib64
+ENV PATH=$PATH:/usr/local/cuda-11.3/bin
+
+# -----------------------------------------------------------------------------
+# 步骤 1: 添加所有必需的 APT 仓库
+# (NVIDIA, Kitware for CMake, ROS Noetic)
+# -----------------------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gnupg \
+    wget \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# 1.1: 添加 NVIDIA cuDNN 和 TensorRT 仓库
+# (CUDA 仓库已在基础镜像中)
+RUN wget https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004/x86_64/nvidia-machine-learning-repo-ubuntu2004_1.0.0-1_amd64.deb \
+    && dpkg -i nvidia-machine-learning-repo-ubuntu2004_1.0.0-1_amd64.deb \
+    && rm nvidia-machine-learning-repo-ubuntu2004_1.0.0-1_amd64.deb \
+    && apt-key adv --fetch-keys https://developer.download.nvidia.com/compute/machine-learning/repos/ubuntu2004/x86_64/7fa2af80.pub \
+    && apt-get update
+
+# 1.2: 添加 Kitware 仓库 (用于最新的 CMake)
+#RUN wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc | gpg --dearmor - > /usr/share/keyrings/kitware-archive-keyring.gpg \
+#    && echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://#apt.kitware.com/ubuntu/ focal main' > /etc/apt/sources.list.d/kitware.list
+
+# 1.3: 添加 ROS Noetic 仓库
+RUN sh -c 'echo "deb http://packages.ros.org/ros/ubuntu focal main" > /etc/apt/sources.list.d/ros-latest.list' \
+    && curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | apt-key add -
+
+# -----------------------------------------------------------------------------
+# 步骤 2: 安装所有依赖
+# -----------------------------------------------------------------------------
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    # --- C++ & Build Tools ---
+    build-essential \
+    libgomp1 \
+    # (来自 Kitware, 满足 >= 3.22.3)
+    cmake \
+    git \
+    
+    # --- Python & ROS Tools ---
+    python3-pip \
+    python3-vcstools \
+    python3-rosdep \
+    python3-rosinstall \
+    python3-rosinstall-generator \
+    
+    # --- 库 (版本匹配) ---
+    # Eigen (>= 3.3.7) -> focal 默认 3.3.7
+    libeigen3-dev \
+    # PCL (>= 1.10.0) -> focal 默认 1.10.0
+    libpcl-dev \
+    # Ceres (1.14.0) -> focal 默认 1.14.0
+    libceres-dev \
+
+    # --- NVIDIA Libs (固定版本) ---
+    # Cudnn 8.2.1 (for CUDA 11.3)
+    libcudnn8=8.2.1.32-1+cuda11.3 \
+    libcudnn8-dev=8.2.1.32-1+cuda11.3 \
+    
+    # TensorRT 8.5.3 (for CUDA 11.3)
+    libnvinfer8=8.5.3* \
+    libnvinfer-dev=8.5.3* \
+    libnvinfer-plugin8=8.5.3* \
+    libnvparsers8=8.5.3* \
+    libnvonnxparsers8=8.5.3* \
+    python3-libnvinfer=8.5.3* \
+    
+    # --- ROS Noetic 包 ---
+    ros-noetic-roscpp \
+    ros-noetic-std-msgs \
+    ros-noetic-sensor-msgs \
+    ros-noetic-geometry-msgs \
+    ros-noetic-pcl-ros \
+    ros-noetic-jsk-recognition-msgs \
+    
+    # --- 清理 ---
+    && rm -rf /var/lib/apt/lists/*
+
+# -----------------------------------------------------------------------------
+# 步骤 3: 初始化 ROS 环境
+# -----------------------------------------------------------------------------
+#RUN echo "185.199.108.133 raw.githubusercontent.com" >> /etc/hosts
+#RUN rosdep init
+RUN mkdir -p /etc/ros/rosdep/sources.list.d/ \
+    && echo "yaml https://gitee.com/ros-distro/rosdistro/raw/master/rosdep/sources.list.d/20-default.list" > /etc/ros/rosdep/sources.list.d/20-default.list
+#RUN rosdep update
+
+# -----------------------------------------------------------------------------
+# 步骤 4: 创建 Catkin 工作区
+# -----------------------------------------------------------------------------
+WORKDIR /catkin_ws
+RUN /bin/bash -c 'source /opt/ros/noetic/setup.bash && \
+    mkdir -p /catkin_ws/src && \
+    catkin_init_workspace src'
+
+# -----------------------------------------------------------------------------
+# 步骤 5: 设置入口点
+# -----------------------------------------------------------------------------
+COPY ros_entrypoint.sh /
+RUN chmod +x /ros_entrypoint.sh
+ENTRYPOINT ["/ros_entrypoint.sh"]
+CMD ["bash"]
